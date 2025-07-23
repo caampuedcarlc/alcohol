@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Submeter Bill Calculator</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 2em; background: #f4f4f4; }
+    h2 { color: #333; }
+    .container { background: white; padding: 2em; border-radius: 8px; max-width: 800px; margin: auto; }
+    .submeter-block { border: 1px solid #ccc; padding: 1em; margin-top: 1em; border-radius: 5px; background: #fafafa; }
+    label { display: block; margin-top: 0.5em; }
+    input[type="number"], input[type="date"] { width: 100%; padding: 0.5em; }
+    .result { margin-top: 1em; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Electricity Bill Calculator for Submeters</h2>
+
+    <h3>Main Meralco Meter Info</h3>
+    <label>Total kWh Consumption:</label>
+    <input type="number" id="mainKwh" placeholder="e.g. 946">
+
+    <label>Total Amount Due (PHP):</label>
+    <input type="number" id="mainAmount" placeholder="e.g. 12959.68">
+
+    <div id="submeters">
+      <!-- Submeter Blocks -->
+    </div>
+
+    <button onclick="calculateBills()">Calculate</button>
+
+    <div id="results" class="result"></div>
+  </div>
+
+  <script>
+    const submeterCount = 3;
+
+    // Create input blocks for submeters
+    const submetersDiv = document.getElementById('submeters');
+    for (let i = 1; i <= submeterCount; i++) {
+      submetersDiv.innerHTML += `
+        <div class="submeter-block">
+          <h4>Submeter ${i}</h4>
+          <label>Start Date:</label>
+          <input type="date" id="startDate${i}">
+
+          <label>End Date:</label>
+          <input type="date" id="endDate${i}">
+
+          <label>Previous Reading (kWh):</label>
+          <input type="number" id="prevReading${i}">
+
+          <label>Current Reading (kWh):</label>
+          <input type="number" id="currReading${i}">
+        </div>
+      `;
+    }
+
+    function calculateBills() {
+      const totalKwh = parseFloat(document.getElementById('mainKwh').value);
+      const totalAmount = parseFloat(document.getElementById('mainAmount').value);
+      const rate = totalAmount / totalKwh;
+
+      let resultsHtml = `<p>Rate per kWh: PHP ${rate.toFixed(5)}</p>`;
+
+      for (let i = 1; i <= submeterCount; i++) {
+        const start = new Date(document.getElementById(`startDate${i}`).value);
+        const end = new Date(document.getElementById(`endDate${i}`).value);
+        const prev = parseFloat(document.getElementById(`prevReading${i}`).value);
+        const curr = parseFloat(document.getElementById(`currReading${i}`).value);
+
+        const days = (end - start) / (1000 * 60 * 60 * 24);
+        const consumed = curr - prev;
+        const dailyAve = consumed / days;
+        const projectedMonthlyKwh = dailyAve * 30; // assume 30-day month
+        const projectedAmount = projectedMonthlyKwh * rate;
+
+        resultsHtml += `
+          <p><strong>Submeter ${i}:</strong><br>
+          Consumed: ${consumed.toFixed(2)} kWh<br>
+          Daily Ave: ${dailyAve.toFixed(2)} kWh<br>
+          Projected Monthly: ${projectedMonthlyKwh.toFixed(2)} kWh<br>
+          Estimated Amount Due: PHP ${projectedAmount.toFixed(2)}</p>
+        `;
+      }
+
+      document.getElementById('results').innerHTML = resultsHtml;
+    }
+  </script>
+</body>
+</html>
